@@ -1,27 +1,60 @@
 <template>
   <div id="app">
-    <Todos v-bind:todos="todos"></Todos>
+    <Header/>
+    <AddTodo v-on:add-todo="addTodo"/>
+    <Todos v-on:del-todo="deleteTodo" v-bind:todos="todos"/>
   </div>
 </template>
 
 <script>
 import Todos from './components/Todos';
+import Header from "./components/Header";
+import AddTodo from "./components/AddTodo";
 
 export default {
   name: 'app',
   components: {
-    Todos
+    Todos,
+    Header,
+    AddTodo
   },
   data() {
     return {
-      todos: [
-        {id: 1, title: "get the trash out", isCompleted: false},
-        {id: 2, title: "do laundry", isCompleted: true},
-        {id: 3, title: "go wash ur car", isCompleted: false},
-        {id: 4, title: "hit the gym", isCompleted: true},
-        {id: 5, title: "hahahaha hahahah", isCompleted: false},
-      ]
+      todos: []
     }
+  },
+  methods: {
+    deleteTodo(id) {
+      fetch('https://jsonplaceholder.typicode.com/todos' + '/' + id, {
+        method: "DELETE"
+      })
+      .then(data => data.json())
+      .then(data => this.todos = this.todos.filter(todo => todo.id != id))
+      .catch(err => console.error(err));
+    },
+    addTodo({ title, completed }) {
+      // newTodo.id = this.todos.length != 0 ? this.todos[this.todos.length-1].id+1 : 1;
+      const obj = {
+        title, 
+        completed
+      };
+      fetch('https://jsonplaceholder.typicode.com/todos', {
+        method: "POST",
+        body: JSON.stringify(obj),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(data => data.json())
+      .then(data => this.todos = [...this.todos, data])
+      .catch(err => console.log(err));
+    }
+  },
+  created() {
+    fetch('https://jsonplaceholder.typicode.com/todos')
+    .then(data => data.json())
+    .then(data => this.todos = data.slice(0, 5))
+    .catch(err => console.error(err));
   }
 }
 </script>
@@ -30,6 +63,5 @@ export default {
     #app {
       border: 4px solid black;
       border-radius: 5px;
-      box-sizing: border-box;
     }
 </style>
